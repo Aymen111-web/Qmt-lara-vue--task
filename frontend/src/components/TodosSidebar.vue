@@ -57,11 +57,11 @@ const isActive = (path) => route.path === path
 
     <!-- Nav -->
     <nav class="flex-1 px-3 py-5 overflow-y-auto">
-      <p
+      <!-- <p
         class="text-[11px] font-bold tracking-widest text-white/40 uppercase px-2 mb-3"
       >
         Main Menu
-      </p>
+      </p> -->
 
       <router-link
         v-for="item in navItems"

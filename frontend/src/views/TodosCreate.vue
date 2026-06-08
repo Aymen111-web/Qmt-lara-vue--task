@@ -51,7 +51,11 @@ const handleCreateTodo = async () => {
 }
 
 const handleLogout = async () => {
-  try { await authService.logout() } catch {}
+  try {
+    await authService.logout()
+  } catch (error) {
+    console.error('Logout failed:', error)
+  }
   router.push('/')
 }
 
@@ -75,17 +79,17 @@ onMounted(async () => {
         @logout="handleLogout"
       />
 
-      <div class="flex-1 p-8 mt-16 max-w-[900px] w-full mx-auto">
+      <div class="flex-1 p-10 mt-16 max-w-[1100px] w-full mx-auto">
 
         <!-- Header -->
-        <div class="flex justify-between items-start mb-7">
+        <div class="flex justify-between items-center mb-10">
           <div>
-            <h1 class="text-2xl font-extrabold text-slate-900">Create Task</h1>
-            <p class="text-sm text-slate-500 mt-1">Add a new task to your list</p>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight">Create Task</h1>
+            <p class="text-base text-slate-500 mt-2">Add a new task to your list</p>
           </div>
 
           <button
-            class="px-4 py-2 rounded-lg border bg-white text-slate-600 hover:bg-slate-50 font-semibold"
+            class="px-6 py-3 rounded-xl border bg-white text-slate-600 hover:bg-slate-50 font-bold text-base shadow-sm hover:shadow transition-all"
             @click="$router.push('/todos/list')"
           >
             ← View Tasks
@@ -93,66 +97,64 @@ onMounted(async () => {
         </div>
 
         <!-- Form Card -->
-        <div class="bg-white rounded-2xl shadow border border-slate-100 p-8 max-w-[900px]">
+        <div class="bg-white rounded-2xl shadow border border-slate-100 p-10 max-w-[1100px]">
 
-          <form @submit.prevent="handleCreateTodo" class="flex flex-col gap-6">
+          <form @submit.prevent="handleCreateTodo" class="flex flex-col gap-8">
 
             <!-- Title -->
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-bold text-slate-700">
+            <div class="flex flex-col gap-2">
+              <label class="text-base font-extrabold text-slate-800">
                 Task Title <span class="text-red-500">*</span>
               </label>
               <input
                 v-model="newTodo.title"
-                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 placeholder="What needs to be done?"
               />
             </div>
 
             <!-- Description -->
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-bold text-slate-700">Description</label>
+            <div class="flex flex-col gap-2">
+              <label class="text-base font-extrabold text-slate-800">Description</label>
               <textarea
                 v-model="newTodo.description"
-                rows="4"
-                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
+                rows="5"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none resize-none transition-all"
                 placeholder="Add more details..."
               ></textarea>
             </div>
 
             <!-- Dates -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-slate-700">Start Date</label>
+              <div class="flex flex-col gap-2">
+                <label class="text-base font-extrabold text-slate-800">Start Date</label>
                 <input
                   type="date"
                   v-model="newTodo.start_date"
-                  class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                  class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 />
-                <p class="text-xs text-slate-400">When does this start?</p>
+                <p class="text-sm text-slate-400 mt-1">When does this start?</p>
               </div>
 
-              <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-slate-700">Due Date</label>
+              <div class="flex flex-col gap-2">
+                <label class="text-base font-extrabold text-slate-800">Due Date</label>
                 <input
                   type="date"
                   v-model="newTodo.due_date"
-                  class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                  class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 />
-                <p class="text-xs text-slate-400">Deadline</p>
+                <p class="text-sm text-slate-400 mt-1">Deadline</p>
               </div>
 
             </div>
 
-
-
             <!-- Actions -->
-            <div class="flex justify-end gap-3 pt-2">
+            <div class="flex justify-end gap-4 pt-4">
 
               <button
                 type="button"
-                class="px-5 py-2 rounded-lg border bg-white hover:bg-slate-50 text-slate-600 font-semibold"
+                class="px-7 py-3 rounded-xl border bg-white hover:bg-slate-50 text-slate-600 font-bold text-lg transition-all"
                 @click="$router.push('/todos/list')"
               >
                 Cancel
@@ -161,9 +163,9 @@ onMounted(async () => {
               <button
                 type="submit"
                 :disabled="actionLoading"
-                class="flex items-center gap-2 px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold"
+                class="flex items-center gap-3 px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-black text-lg shadow-md hover:shadow-lg transition-all cursor-pointer"
               >
-                <span v-if="actionLoading" class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                <span v-if="actionLoading" class="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
                 {{ actionLoading ? 'Creating...' : 'Create Task' }}
               </button>
 
@@ -177,7 +179,7 @@ onMounted(async () => {
     <!-- Toast -->
     <div
       v-if="showToast"
-      class="fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg font-semibold text-sm"
+      class="fixed bottom-8 right-8 px-6 py-4 rounded-2xl shadow-xl font-bold text-base"
       :class="toastType === 'success'
         ? 'bg-slate-900 text-white'
         : 'bg-red-50 text-red-700 border border-red-200'"

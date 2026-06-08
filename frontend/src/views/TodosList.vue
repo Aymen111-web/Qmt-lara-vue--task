@@ -378,7 +378,7 @@ const filterLabels = [
     <div class="bg-white p-8 rounded-2xl w-[450px] shadow-2xl text-center transform scale-100 transition-all">
       <div class="text-rose-500 text-5xl mb-3">⚠️</div>
       <h3 class="font-bold text-2xl text-slate-900 mb-2">Delete Task?</h3>
-      <p class="text-base text-slate-500 mb-6">Are you sure you want to delete this task? This action cannot be undone.</p>
+      <p class="text-base text-slate-500 mb-6">Are you sure you want to delete this task?</p>
       <div class="flex justify-center gap-4">
         <button
           class="px-6 py-3 rounded-xl border bg-white text-slate-600 hover:bg-slate-50 font-bold text-base cursor-pointer transition-all"

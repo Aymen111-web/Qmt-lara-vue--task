@@ -201,8 +201,6 @@ const filteredTodos = computed(() => {
   } else if (dateFilterType.value === 'this_month') {
     const { start: monthStart, end: monthEnd } = getMonthRange()
     list = list.filter(t => isTaskInInterval(t, monthStart, monthEnd))
-  } else if (dateFilterType.value === 'overdue') {
-    list = list.filter(t => isOverdue(t))
   } else if (dateFilterType.value === 'custom') {
     const customStart = dateRangeStart.value ? parseLocalDate(dateRangeStart.value) : new Date(0)
     const customEnd = dateRangeEnd.value ? parseLocalDate(dateRangeEnd.value) : new Date(8640000000000000)
@@ -432,7 +430,6 @@ const statusConfig = {
                       <option value="today">Today</option>
                       <option value="this_week">This Week</option>
                       <option value="this_month">This Month</option>
-                      <option value="overdue">Overdue</option>
                       <option value="custom">Custom Range</option>
                     </select>
 

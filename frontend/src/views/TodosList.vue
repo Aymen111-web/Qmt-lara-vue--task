@@ -19,15 +19,13 @@ const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const todoToDeleteId = ref(null)
 
-const toastMessage = ref('')
-const toastType = ref('success')
-const showToast = ref(false)
+const cardToasts = ref({})
 
-const triggerToast = (msg, type = 'success') => {
-  toastMessage.value = msg
-  toastType.value = type
-  showToast.value = true
-  setTimeout(() => (showToast.value = false), 3000)
+const triggerToast = (msg, type = 'success', todoId = 'global') => {
+  cardToasts.value[todoId] = { message: msg, type }
+  setTimeout(() => {
+    delete cardToasts.value[todoId]
+  }, 3000)
 }
 
 const fetchData = async () => {
@@ -35,7 +33,7 @@ const fetchData = async () => {
     user.value = authService.getUser() || await authService.getCurrentUser()
     todos.value = await todoService.getAll()
   } catch {
-    triggerToast('Failed to load tasks', 'error')
+    triggerToast('Failed to load tasks', 'error', 'global')
   } finally {
     loading.value = false
   }
@@ -72,9 +70,9 @@ const handleStatusChange = async (todo, newStatus) => {
     if (i !== -1) {
       todos.value[i] = updated
     }
-    triggerToast('Status updated 🎉')
+    triggerToast('Status updated 🎉', 'success', todo.id)
   } catch {
-    triggerToast('Failed to update status', 'error')
+    triggerToast('Failed to update status', 'error', todo.id)
   }
 }
 
@@ -85,7 +83,7 @@ const openEditModal = (todo) => {
 
 const handleSaveEdit = async () => {
   if (!editingTodo.value.title.trim()) {
-    triggerToast('Title required', 'error')
+    triggerToast('Title required', 'error', editingTodo.value.id)
     return
   }
 
@@ -101,9 +99,9 @@ const handleSaveEdit = async () => {
     if (i !== -1) todos.value[i] = updated
 
     showEditModal.value = false
-    triggerToast('Updated successfully')
+    triggerToast('Updated successfully', 'success', editingTodo.value.id)
   } catch {
-    triggerToast('Update failed', 'error')
+    triggerToast('Update failed', 'error', editingTodo.value.id)
   }
 }
 
@@ -114,12 +112,13 @@ const handleDeleteTodo = (id) => {
 
 const confirmDelete = async () => {
   if (!todoToDeleteId.value) return
+  const targetId = todoToDeleteId.value
   try {
-    await todoService.delete(todoToDeleteId.value)
-    todos.value = todos.value.filter(t => t.id !== todoToDeleteId.value)
-    triggerToast('Deleted')
+    await todoService.delete(targetId)
+    todos.value = todos.value.filter(t => t.id !== targetId)
+    triggerToast('Deleted successfully', 'success', 'global')
   } catch {
-    triggerToast('Delete failed', 'error')
+    triggerToast('Delete failed', 'error', 'global')
   } finally {
     showDeleteModal.value = false
     todoToDeleteId.value = null
@@ -219,7 +218,19 @@ const filterLabels = [
       <div v-else-if="viewStyle==='card'" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <div v-for="t in filteredTodos" :key="t.id"
-          class="bg-white rounded-2xl border shadow p-6 flex flex-col gap-3 transition-all hover:shadow-md">
+          class="relative overflow-hidden bg-white rounded-2xl border shadow p-6 flex flex-col gap-3 transition-all hover:shadow-md">
+
+          <!-- Card Toast Overlay -->
+          <Transition name="toast-slide">
+            <div v-if="cardToasts[t.id]" 
+                 class="absolute inset-x-0 top-0 p-3 text-center text-sm font-bold flex items-center justify-center gap-2 border-b z-10"
+                 :class="cardToasts[t.id].type === 'success' 
+                   ? 'bg-green-50 text-green-700 border-green-200' 
+                   : 'bg-red-50 text-red-700 border-red-200'">
+              <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
+              <span>{{ cardToasts[t.id].message }}</span>
+            </div>
+          </Transition>
 
           <div class="flex justify-between items-center">
             <select
@@ -277,18 +288,30 @@ const filterLabels = [
               </td>
 
               <td class="p-4.5">
-                <select
-                  :value="t.computedStatus"
-                  @change="handleStatusChange(t, $event.target.value)"
-                  class="px-4 py-2 text-sm rounded-full font-bold outline-none border-none cursor-pointer appearance-none bg-no-repeat pr-8 shadow-sm hover:brightness-95 transition-all"
-                  :class="statusConfig[t.computedStatus].badge"
-                  style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-position: right 10px center; background-size: 10px auto;"
-                >
-                  <option value="todo" class="bg-white text-slate-800 font-medium">Todo</option>
-                  <option value="pending" class="bg-white text-slate-800 font-medium">Pending</option>
-                  <option value="completed" class="bg-white text-slate-800 font-medium">Completed</option>
-                  <option value="overdue" class="bg-white text-slate-800 font-medium">Overdue</option>
-                </select>
+                <div class="relative inline-flex items-center">
+                  <select
+                    :value="t.computedStatus"
+                    @change="handleStatusChange(t, $event.target.value)"
+                    class="px-4 py-2 text-sm rounded-full font-bold outline-none border-none cursor-pointer appearance-none bg-no-repeat pr-8 shadow-sm hover:brightness-95 transition-all"
+                    :class="statusConfig[t.computedStatus].badge"
+                    style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-position: right 10px center; background-size: 10px auto;"
+                  >
+                    <option value="todo" class="bg-white text-slate-800 font-medium">Todo</option>
+                    <option value="pending" class="bg-white text-slate-800 font-medium">Pending</option>
+                    <option value="completed" class="bg-white text-slate-800 font-medium">Completed</option>
+                    <option value="overdue" class="bg-white text-slate-800 font-medium">Overdue</option>
+                  </select>
+                  <Transition name="fade">
+                    <div v-if="cardToasts[t.id]" 
+                         class="absolute left-full ml-3 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap shadow border flex items-center gap-1.5 z-10"
+                         :class="cardToasts[t.id].type === 'success' 
+                           ? 'bg-green-50 text-green-700 border-green-200' 
+                           : 'bg-red-50 text-red-700 border-red-200'">
+                      <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
+                      <span>{{ cardToasts[t.id].message }}</span>
+                    </div>
+                  </Transition>
+                </div>
               </td>
 
               <td class="p-4.5 text-slate-600">{{ t.start_date || '—' }}</td>
@@ -396,11 +419,57 @@ const filterLabels = [
     </div>
   </div>
 
-  <!-- TOAST -->
-  <div v-if="showToast"
-    class="fixed bottom-8 right-8 px-6 py-4 rounded-2xl shadow-xl font-bold text-base bg-slate-900 text-white">
-    {{ toastMessage }}
-  </div>
+  <!-- GLOBAL TOAST -->
+  <Transition name="global-toast">
+    <div v-if="cardToasts['global']"
+      class="fixed top-24 right-8 px-6 py-4 rounded-2xl shadow-xl font-bold text-base z-50 flex items-center gap-2 border"
+      :class="cardToasts['global'].type === 'success' 
+        ? 'bg-green-50 text-green-700 border-green-200' 
+        : 'bg-red-50 text-red-700 border-red-200'">
+      <span>{{ cardToasts['global'].type === 'success' ? '✅' : '❌' }}</span>
+      <span>{{ cardToasts['global'].message }}</span>
+    </div>
+  </Transition>
 
 </div>
 </template>
+
+<style scoped>
+/* Toast transitions */
+.toast-slide-enter-active,
+.toast-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toast-slide-enter-from {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+.toast-slide-leave-to {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+/* Fade transition for table view inline toast */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Global toast transitions */
+.global-toast-enter-active,
+.global-toast-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.global-toast-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.global-toast-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+</style>

@@ -5,17 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TodoController;
 
+// Public routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/api/register', [AuthController::class, 'register']);
-    Route::post('/api/login', [AuthController::class, 'login']);
-
-
-    Route::middleware('auth:sanctum')->group(function () {
-     Route::post('/api/register', [AuthController::class, 'register']);
-    Route::post('/api/login', [AuthController::class, 'login']);
-
+// Protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
     Route::get('/todos', [TodoController::class, 'index']);
     Route::post('/todos', [TodoController::class, 'store']);
     Route::put('/todos/{id}', [TodoController::class, 'update']);

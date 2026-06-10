@@ -79,7 +79,7 @@ onMounted(async () => {
         @logout="handleLogout"
       />
 
-      <div class="flex-1 p-10 mt-16 max-w-[1100px] w-full mx-auto">
+      <div class="flex-1 px-6 py-10 mt-16 max-w-[1400px] w-full mx-auto">
 
         <!-- Header -->
         <div class="flex justify-between items-center mb-10">
@@ -97,7 +97,7 @@ onMounted(async () => {
         </div>
 
         <!-- Form Card -->
-        <div class="relative overflow-hidden bg-white rounded-2xl shadow border border-slate-100 p-10 max-w-[1100px]">
+        <div class="relative overflow-hidden bg-white rounded-2xl shadow border border-slate-100 p-10 w-full ">
 
           <!-- Card Toast Overlay -->
           <Transition name="toast-slide">

@@ -113,11 +113,11 @@ const getWeekRange = () => {
   const diff = now.getDate() - day + (day === 0 ? -6 : 1)
   const monday = new Date(now.setDate(diff))
   monday.setHours(0, 0, 0, 0)
-  
+
   const sunday = new Date(monday)
   sunday.setDate(monday.getDate() + 6)
   sunday.setHours(23, 59, 59, 999)
-  
+
   return { start: monday, end: sunday }
 }
 
@@ -172,12 +172,12 @@ onUnmounted(() => {
 
 const filteredTodos = computed(() => {
   let list = todos.value.map(t => ({ ...t, computedStatus: t.status }))
-  
+
   // 1. Status Filter
   if (!selectedStatuses.value.includes('all')) {
     list = list.filter(t => selectedStatuses.value.includes(t.computedStatus))
   }
-  
+
   // 2. Date Filter
   const todayStr = getTodayStr()
   if (dateFilterType.value === 'today') {
@@ -191,7 +191,7 @@ const filteredTodos = computed(() => {
   } else if (dateFilterType.value === 'custom') {
     list = list.filter(t => isInCustomRange(t.due_date))
   }
-  
+
   return list
 })
 
@@ -326,7 +326,7 @@ const statusConfig = {
       <!-- FILTERS -->
       <div class="flex justify-between items-center mb-8">
         <div ref="filterContainer" class="relative">
-          <button 
+          <button
             @click="showFilterDropdown = !showFilterDropdown"
             class="flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-800 px-5.5 py-3 rounded-xl font-bold text-base shadow-sm hover:shadow transition-all cursor-pointer relative"
           >
@@ -340,22 +340,22 @@ const statusConfig = {
           <!-- Dropdown Panel -->
           <Transition name="dropdown">
             <div v-if="showFilterDropdown" class="absolute left-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 z-30 origin-top-left">
-              
+
               <!-- Section 1: Status -->
               <div class="border-b border-slate-100 pb-4 mb-4">
-                <button 
+                <button
                   @click="filterSections.status = !filterSections.status"
                   class="flex justify-between items-center w-full text-left font-black text-slate-800 text-base mb-3 cursor-pointer"
                 >
                   <span>Filter by Status</span>
                   <span class="text-slate-400 transition-transform duration-200" :class="filterSections.status ? 'rotate-180' : ''">▼</span>
                 </button>
-                
+
                 <Transition name="expand">
                   <div v-show="filterSections.status" class="space-y-2.5 overflow-hidden">
                     <label class="flex items-center gap-3 text-slate-700 font-semibold cursor-pointer select-none">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         :checked="selectedStatuses.includes('all')"
                         @change="toggleStatusFilter('all')"
                         class="w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
@@ -363,8 +363,8 @@ const statusConfig = {
                       <span>All Statuses ({{ stats.total }})</span>
                     </label>
                     <label v-for="(cfg, key) in statusConfig" :key="key" class="flex items-center gap-3 text-slate-700 font-semibold cursor-pointer select-none">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         :checked="selectedStatuses.includes(key)"
                         @change="toggleStatusFilter(key)"
                         class="w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
@@ -380,17 +380,17 @@ const statusConfig = {
 
               <!-- Section 2: Date -->
               <div class="mb-5">
-                <button 
+                <button
                   @click="filterSections.date = !filterSections.date"
                   class="flex justify-between items-center w-full text-left font-black text-slate-800 text-base mb-3 cursor-pointer"
                 >
                   <span>Filter by Date</span>
                   <span class="text-slate-400 transition-transform duration-200" :class="filterSections.date ? 'rotate-180' : ''">▼</span>
                 </button>
-                
+
                 <Transition name="expand">
                   <div v-show="filterSections.date" class="space-y-3.5 overflow-hidden">
-                    <select 
+                    <select
                       v-model="dateFilterType"
                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 font-bold outline-none cursor-pointer focus:bg-white focus:border-blue-500 transition-all"
                     >
@@ -405,16 +405,16 @@ const statusConfig = {
                     <div v-if="dateFilterType === 'custom'" class="space-y-2.5 pt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
                       <div>
                         <label class="text-[10px] uppercase font-black text-slate-400 block mb-1">Start Date</label>
-                        <input 
-                          type="date" 
+                        <input
+                          type="date"
                           v-model="dateRangeStart"
                           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-2 text-slate-700 font-medium text-sm outline-none focus:bg-white focus:border-blue-500 transition-all"
                         />
                       </div>
                       <div>
                         <label class="text-[10px] uppercase font-black text-slate-400 block mb-1">End Date</label>
-                        <input 
-                          type="date" 
+                        <input
+                          type="date"
                           v-model="dateRangeEnd"
                           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-2 text-slate-700 font-medium text-sm outline-none focus:bg-white focus:border-blue-500 transition-all"
                         />
@@ -426,7 +426,7 @@ const statusConfig = {
 
               <!-- Actions -->
               <div v-if="activeFiltersCount > 0" class="flex justify-end border-t border-slate-100 pt-4">
-                <button 
+                <button
                   @click="clearAllFilters"
                   class="text-sm font-bold text-red-500 hover:text-red-600 hover:underline cursor-pointer transition-all"
                 >
@@ -462,10 +462,10 @@ const statusConfig = {
 
           <!-- Card Toast Overlay -->
           <Transition name="toast-slide">
-            <div v-if="cardToasts[t.id]" 
+            <div v-if="cardToasts[t.id]"
                  class="absolute inset-x-0 top-0 p-3 text-center text-sm font-bold flex items-center justify-center gap-2 border-b z-10"
-                 :class="cardToasts[t.id].type === 'success' 
-                   ? 'bg-green-50 text-green-700 border-green-200' 
+                 :class="cardToasts[t.id].type === 'success'
+                   ? 'bg-green-50 text-green-700 border-green-200'
                    : 'bg-red-50 text-red-700 border-red-200'">
               <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
               <span>{{ cardToasts[t.id].message }}</span>
@@ -542,10 +542,10 @@ const statusConfig = {
                     <option value="overdue" class="bg-white text-slate-800 font-medium">Overdue</option>
                   </select>
                   <Transition name="fade">
-                    <div v-if="cardToasts[t.id]" 
+                    <div v-if="cardToasts[t.id]"
                          class="absolute left-full ml-3 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap shadow border flex items-center gap-1.5 z-10"
-                         :class="cardToasts[t.id].type === 'success' 
-                           ? 'bg-green-50 text-green-700 border-green-200' 
+                         :class="cardToasts[t.id].type === 'success'
+                           ? 'bg-green-50 text-green-700 border-green-200'
                            : 'bg-red-50 text-red-700 border-red-200'">
                       <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
                       <span>{{ cardToasts[t.id].message }}</span>
@@ -589,13 +589,13 @@ const statusConfig = {
 
       <input
         v-model="editingTodo.title"
-        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 transition-all"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 transition-all"
         placeholder="Task Title"
       />
       <textarea
         v-model="editingTodo.description"
         rows="4"
-        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 resize-none transition-all"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 resize-none transition-all"
         placeholder="Description"
       ></textarea>
 
@@ -605,7 +605,7 @@ const statusConfig = {
           <input
             type="date"
             v-model="editingTodo.start_date"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
           />
         </div>
         <div class="flex-1">
@@ -613,7 +613,7 @@ const statusConfig = {
           <input
             type="date"
             v-model="editingTodo.due_date"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
           />
         </div>
       </div>
@@ -663,8 +663,8 @@ const statusConfig = {
   <Transition name="global-toast">
     <div v-if="cardToasts['global']"
       class="fixed top-24 right-8 px-6 py-4 rounded-2xl shadow-xl font-bold text-base z-50 flex items-center gap-2 border"
-      :class="cardToasts['global'].type === 'success' 
-        ? 'bg-green-50 text-green-700 border-green-200' 
+      :class="cardToasts['global'].type === 'success'
+        ? 'bg-green-50 text-green-700 border-green-200'
         : 'bg-red-50 text-red-700 border-red-200'">
       <span>{{ cardToasts['global'].type === 'success' ? '✅' : '❌' }}</span>
       <span>{{ cardToasts['global'].message }}</span>
@@ -734,5 +734,11 @@ const statusConfig = {
 .expand-leave-to {
   max-height: 0;
   opacity: 0;
+}
+
+/* Explicit text override for Edit Modal input fields */
+.bg-white input,
+.bg-white textarea {
+  color: #000000 !important;
 }
 </style>

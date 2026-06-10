@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authService, todoService } from '../services/api'
 import TodosSidebar from '../components/TodosSidebar.vue'
@@ -13,7 +13,20 @@ const todos = ref([])
 const loading = ref(true)
 const dropdownOpen = ref(false)
 const viewStyle = ref('card')
-const activeFilter = ref('')
+
+const showFilterDropdown = ref(false)
+const filterSections = ref({
+  status: true,
+  date: true
+})
+
+const selectedStatuses = ref(['all'])
+const dateFilterType = ref('all') // 'all', 'today', 'this_week', 'this_month', 'overdue', 'custom'
+const dateRangeStart = ref('')
+const dateRangeEnd = ref('')
+
+const filterContainer = ref(null)
+
 const editingTodo = ref(null)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
@@ -39,16 +52,147 @@ const fetchData = async () => {
   }
 }
 
+const toggleStatusFilter = (status) => {
+  if (status === 'all') {
+    selectedStatuses.value = ['all']
+  } else {
+    const indexAll = selectedStatuses.value.indexOf('all')
+    if (indexAll !== -1) {
+      selectedStatuses.value.splice(indexAll, 1)
+    }
+
+    const index = selectedStatuses.value.indexOf(status)
+    if (index !== -1) {
+      selectedStatuses.value.splice(index, 1)
+    } else {
+      selectedStatuses.value.push(status)
+    }
+
+    if (selectedStatuses.value.length === 0) {
+      selectedStatuses.value = ['all']
+    } else if (
+      selectedStatuses.value.includes('todo') &&
+      selectedStatuses.value.includes('pending') &&
+      selectedStatuses.value.includes('overdue') &&
+      selectedStatuses.value.includes('completed')
+    ) {
+      selectedStatuses.value = ['all']
+    }
+  }
+}
+
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (!selectedStatuses.value.includes('all')) {
+    count += selectedStatuses.value.length
+  }
+  if (dateFilterType.value !== 'all') {
+    count += 1
+  }
+  return count
+})
+
+const clearAllFilters = () => {
+  selectedStatuses.value = ['all']
+  dateFilterType.value = 'all'
+  dateRangeStart.value = ''
+  dateRangeEnd.value = ''
+}
+
+const getTodayStr = () => {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const getWeekRange = () => {
+  const now = new Date()
+  const day = now.getDay()
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+  const monday = new Date(now.setDate(diff))
+  monday.setHours(0, 0, 0, 0)
+  
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  sunday.setHours(23, 59, 59, 999)
+  
+  return { start: monday, end: sunday }
+}
+
+const isInThisWeek = (dateStr) => {
+  if (!dateStr) return false
+  const d = new Date(dateStr)
+  d.setHours(0, 0, 0, 0)
+  const { start, end } = getWeekRange()
+  return d >= start && d <= end
+}
+
+const isInThisMonth = (dateStr) => {
+  if (!dateStr) return false
+  const d = new Date(dateStr)
+  const now = new Date()
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+}
+
+const isOverdue = (todo) => {
+  if (todo.status === 'overdue') return true
+  if (todo.status === 'completed') return false
+  if (!todo.due_date) return false
+  const todayStr = getTodayStr()
+  return todo.due_date < todayStr
+}
+
+const isInCustomRange = (dateStr) => {
+  if (!dateStr) return false
+  if (dateRangeStart.value && dateStr < dateRangeStart.value) return false
+  if (dateRangeEnd.value && dateStr > dateRangeEnd.value) return false
+  return true
+}
+
+const handleClickOutside = (event) => {
+  if (filterContainer.value && !filterContainer.value.contains(event.target)) {
+    showFilterDropdown.value = false
+  }
+}
+
 onMounted(() => {
   if (!authService.isAuthenticated()) router.push('/')
-  if (route.query.status) activeFilter.value = route.query.status
+  if (route.query.status) {
+    selectedStatuses.value = [route.query.status]
+  }
+  document.addEventListener('click', handleClickOutside)
   fetchData()
 })
 
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 const filteredTodos = computed(() => {
-  const list = todos.value.map(t => ({ ...t, computedStatus: t.status }))
-  if (!activeFilter.value) return list
-  return list.filter(t => t.computedStatus === activeFilter.value)
+  let list = todos.value.map(t => ({ ...t, computedStatus: t.status }))
+  
+  // 1. Status Filter
+  if (!selectedStatuses.value.includes('all')) {
+    list = list.filter(t => selectedStatuses.value.includes(t.computedStatus))
+  }
+  
+  // 2. Date Filter
+  const todayStr = getTodayStr()
+  if (dateFilterType.value === 'today') {
+    list = list.filter(t => t.due_date && t.due_date === todayStr)
+  } else if (dateFilterType.value === 'this_week') {
+    list = list.filter(t => isInThisWeek(t.due_date))
+  } else if (dateFilterType.value === 'this_month') {
+    list = list.filter(t => isInThisMonth(t.due_date))
+  } else if (dateFilterType.value === 'overdue') {
+    list = list.filter(t => isOverdue(t))
+  } else if (dateFilterType.value === 'custom') {
+    list = list.filter(t => isInCustomRange(t.due_date))
+  }
+  
+  return list
 })
 
 const stats = computed(() => {
@@ -141,13 +285,6 @@ const statusConfig = {
   todo:      { label: 'Todo',      badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' }
 }
 
-const filterLabels = [
-  { key:'', label:'All', count:()=>stats.value.total },
-  { key:'todo', label:'Todo', count:()=>stats.value.todo },
-  { key:'pending', label:'Pending', count:()=>stats.value.pending },
-  { key:'overdue', label:'Overdue', count:()=>stats.value.overdue },
-  { key:'completed', label:'Completed', count:()=>stats.value.completed }
-]
 </script>
 
 <template>
@@ -187,16 +324,119 @@ const filterLabels = [
       </div>
 
       <!-- FILTERS -->
-      <div class="flex flex-wrap gap-3 mb-8">
-        <button
-          v-for="f in filterLabels"
-          :key="f.key"
-          class="px-6 py-3 rounded-full border text-base font-bold shadow-sm cursor-pointer transition-all hover:scale-[1.03]"
-          :class="activeFilter===f.key ? 'bg-slate-900 text-white border-slate-900' : 'bg-white hover:bg-slate-50'"
-          @click="activeFilter=f.key"
-        >
-          {{ f.label }} ({{ f.count() }})
-        </button>
+      <div class="flex justify-between items-center mb-8">
+        <div ref="filterContainer" class="relative">
+          <button 
+            @click="showFilterDropdown = !showFilterDropdown"
+            class="flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-800 px-5.5 py-3 rounded-xl font-bold text-base shadow-sm hover:shadow transition-all cursor-pointer relative"
+          >
+            <span>🔍</span> Filter
+            <span v-if="activeFiltersCount > 0" class="flex items-center justify-center bg-blue-600 text-white text-xs w-5 h-5 rounded-full font-black animate-scale-in">
+              {{ activeFiltersCount }}
+            </span>
+            <span class="text-xs text-slate-400 transition-transform duration-200" :class="showFilterDropdown ? 'rotate-180' : ''">▼</span>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <Transition name="dropdown">
+            <div v-if="showFilterDropdown" class="absolute left-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 z-30 origin-top-left">
+              
+              <!-- Section 1: Status -->
+              <div class="border-b border-slate-100 pb-4 mb-4">
+                <button 
+                  @click="filterSections.status = !filterSections.status"
+                  class="flex justify-between items-center w-full text-left font-black text-slate-800 text-base mb-3 cursor-pointer"
+                >
+                  <span>Filter by Status</span>
+                  <span class="text-slate-400 transition-transform duration-200" :class="filterSections.status ? 'rotate-180' : ''">▼</span>
+                </button>
+                
+                <Transition name="expand">
+                  <div v-show="filterSections.status" class="space-y-2.5 overflow-hidden">
+                    <label class="flex items-center gap-3 text-slate-700 font-semibold cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        :checked="selectedStatuses.includes('all')"
+                        @change="toggleStatusFilter('all')"
+                        class="w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>All Statuses ({{ stats.total }})</span>
+                    </label>
+                    <label v-for="(cfg, key) in statusConfig" :key="key" class="flex items-center gap-3 text-slate-700 font-semibold cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        :checked="selectedStatuses.includes(key)"
+                        @change="toggleStatusFilter(key)"
+                        class="w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full" :class="cfg.dot"></span>
+                        {{ cfg.label }} ({{ stats[key] }})
+                      </span>
+                    </label>
+                  </div>
+                </Transition>
+              </div>
+
+              <!-- Section 2: Date -->
+              <div class="mb-5">
+                <button 
+                  @click="filterSections.date = !filterSections.date"
+                  class="flex justify-between items-center w-full text-left font-black text-slate-800 text-base mb-3 cursor-pointer"
+                >
+                  <span>Filter by Date</span>
+                  <span class="text-slate-400 transition-transform duration-200" :class="filterSections.date ? 'rotate-180' : ''">▼</span>
+                </button>
+                
+                <Transition name="expand">
+                  <div v-show="filterSections.date" class="space-y-3.5 overflow-hidden">
+                    <select 
+                      v-model="dateFilterType"
+                      class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 font-bold outline-none cursor-pointer focus:bg-white focus:border-blue-500 transition-all"
+                    >
+                      <option value="all">All Dates</option>
+                      <option value="today">Today</option>
+                      <option value="this_week">This Week</option>
+                      <option value="this_month">This Month</option>
+                      <option value="overdue">Overdue</option>
+                      <option value="custom">Custom Range</option>
+                    </select>
+
+                    <div v-if="dateFilterType === 'custom'" class="space-y-2.5 pt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div>
+                        <label class="text-[10px] uppercase font-black text-slate-400 block mb-1">Start Date</label>
+                        <input 
+                          type="date" 
+                          v-model="dateRangeStart"
+                          class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-2 text-slate-700 font-medium text-sm outline-none focus:bg-white focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label class="text-[10px] uppercase font-black text-slate-400 block mb-1">End Date</label>
+                        <input 
+                          type="date" 
+                          v-model="dateRangeEnd"
+                          class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-2 text-slate-700 font-medium text-sm outline-none focus:bg-white focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+              </div>
+
+              <!-- Actions -->
+              <div v-if="activeFiltersCount > 0" class="flex justify-end border-t border-slate-100 pt-4">
+                <button 
+                  @click="clearAllFilters"
+                  class="text-sm font-bold text-red-500 hover:text-red-600 hover:underline cursor-pointer transition-all"
+                >
+                  Clear all filters
+                </button>
+              </div>
+
+            </div>
+          </Transition>
+        </div>
       </div>
 
       <!-- LOADING -->
@@ -470,6 +710,29 @@ const filterLabels = [
 }
 .global-toast-leave-to {
   transform: translateX(100%);
+  opacity: 0;
+}
+
+/* Dropdown transition */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+  transform: scale(0.95);
+  opacity: 0;
+}
+
+/* Expand transition (basic vertical height collapse/expand) */
+.expand-enter-active,
+.expand-leave-active {
+  transition: max-height 0.25s ease-in-out, opacity 0.2s ease;
+  max-height: 350px;
+}
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
   opacity: 0;
 }
 </style>

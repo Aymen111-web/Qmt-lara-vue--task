@@ -31,4 +31,9 @@ return [
 
     'supports_credentials' => false,
 
+    'allowed_origins' => [
+    'https://your-vercel-app.vercel.app',
+    'http://localhost:5173',
+],
+
 ];

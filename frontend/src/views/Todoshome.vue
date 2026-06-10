@@ -108,7 +108,7 @@ const strokeDashoffset = (offset) => {
           <div>
             <h1 class="text-4xl font-black text-slate-900 tracking-tight">Dashboard</h1>
             <p class="text-xl text-slate-700 mt-2">
-              Welcome back{{ user ? ', ' + user.name : '' }} 👋
+              Welcome back{{ user ? ', ' + user.name : '' }}
             </p>
           </div>
 

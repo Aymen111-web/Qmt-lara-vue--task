@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authService, todoService } from '../services/api'
 import TodosSidebar from '../components/TodosSidebar.vue'
@@ -107,6 +107,12 @@ const getTodayStr = () => {
   return `${year}-${month}-${day}`
 }
 
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 const getWeekRange = () => {
   const now = new Date()
   const day = now.getDay()
@@ -121,19 +127,30 @@ const getWeekRange = () => {
   return { start: monday, end: sunday }
 }
 
-const isInThisWeek = (dateStr) => {
-  if (!dateStr) return false
-  const d = new Date(dateStr)
-  d.setHours(0, 0, 0, 0)
-  const { start, end } = getWeekRange()
-  return d >= start && d <= end
+const getMonthRange = () => {
+  const now = new Date()
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+  firstDay.setHours(0, 0, 0, 0)
+
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  lastDay.setHours(23, 59, 59, 999)
+
+  return { start: firstDay, end: lastDay }
 }
 
-const isInThisMonth = (dateStr) => {
-  if (!dateStr) return false
-  const d = new Date(dateStr)
-  const now = new Date()
-  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+const isTaskInInterval = (todo, intervalStart, intervalEnd) => {
+  const startStr = todo.start_date
+  const dueStr = todo.due_date
+
+  if (!startStr && !dueStr) return false
+
+  const start = startStr ? parseLocalDate(startStr) : null
+  const due = dueStr ? parseLocalDate(dueStr) : null
+
+  const taskStart = start || due
+  const taskEnd = due || start
+
+  return taskStart <= intervalEnd && taskEnd >= intervalStart
 }
 
 const isOverdue = (todo) => {
@@ -142,13 +159,6 @@ const isOverdue = (todo) => {
   if (!todo.due_date) return false
   const todayStr = getTodayStr()
   return todo.due_date < todayStr
-}
-
-const isInCustomRange = (dateStr) => {
-  if (!dateStr) return false
-  if (dateRangeStart.value && dateStr < dateRangeStart.value) return false
-  if (dateRangeEnd.value && dateStr > dateRangeEnd.value) return false
-  return true
 }
 
 const handleClickOutside = (event) => {
@@ -179,20 +189,44 @@ const filteredTodos = computed(() => {
   }
 
   // 2. Date Filter
-  const todayStr = getTodayStr()
   if (dateFilterType.value === 'today') {
-    list = list.filter(t => t.due_date && t.due_date === todayStr)
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    const todayEnd = new Date(todayStart)
+    todayEnd.setHours(23, 59, 59, 999)
+    list = list.filter(t => isTaskInInterval(t, todayStart, todayEnd))
   } else if (dateFilterType.value === 'this_week') {
-    list = list.filter(t => isInThisWeek(t.due_date))
+    const { start: weekStart, end: weekEnd } = getWeekRange()
+    list = list.filter(t => isTaskInInterval(t, weekStart, weekEnd))
   } else if (dateFilterType.value === 'this_month') {
-    list = list.filter(t => isInThisMonth(t.due_date))
+    const { start: monthStart, end: monthEnd } = getMonthRange()
+    list = list.filter(t => isTaskInInterval(t, monthStart, monthEnd))
   } else if (dateFilterType.value === 'overdue') {
     list = list.filter(t => isOverdue(t))
   } else if (dateFilterType.value === 'custom') {
-    list = list.filter(t => isInCustomRange(t.due_date))
+    const customStart = dateRangeStart.value ? parseLocalDate(dateRangeStart.value) : new Date(0)
+    const customEnd = dateRangeEnd.value ? parseLocalDate(dateRangeEnd.value) : new Date(8640000000000000)
+    list = list.filter(t => isTaskInInterval(t, customStart, customEnd))
   }
 
   return list
+})
+
+const currentPage = ref(1)
+const itemsPerPage = ref(6)
+
+const paginatedTodos = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredTodos.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(filteredTodos.value.length / itemsPerPage.value))
+})
+
+watch(filteredTodos, () => {
+  currentPage.value = 1
 })
 
 const stats = computed(() => {
@@ -457,7 +491,7 @@ const statusConfig = {
       <!-- CARD VIEW -->
       <div v-else-if="viewStyle==='card'" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <div v-for="t in filteredTodos" :key="t.id"
+        <div v-for="t in paginatedTodos" :key="t.id"
           class="relative overflow-hidden bg-white rounded-2xl border shadow p-6 flex flex-col gap-3 transition-all hover:shadow-md">
 
           <!-- Card Toast Overlay -->
@@ -516,7 +550,7 @@ const statusConfig = {
           </thead>
 
           <tbody>
-            <tr v-for="t in filteredTodos" :key="t.id" class="border-t hover:bg-slate-50/50 transition-colors">
+            <tr v-for="t in paginatedTodos" :key="t.id" class="border-t hover:bg-slate-50/50 transition-colors">
               <td class="p-4.5">
                 <div class="font-bold text-slate-800">{{ t.title }}</div>
               </td>
@@ -576,6 +610,45 @@ const statusConfig = {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div v-if="filteredTodos.length > itemsPerPage" class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-10 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm">
+        <div class="text-sm font-bold text-slate-500">
+          Showing <span class="text-slate-800">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to 
+          <span class="text-slate-800">{{ Math.min(currentPage * itemsPerPage, filteredTodos.length) }}</span> of 
+          <span class="text-slate-800">{{ filteredTodos.length }}</span> tasks
+        </div>
+
+        <div class="flex gap-2.5 items-center">
+          <button 
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+            class="px-4 py-2 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 disabled:cursor-not-allowed border border-slate-200 rounded-xl font-bold transition-all cursor-pointer select-none"
+          >
+            ← Previous
+          </button>
+
+          <div class="flex gap-1.5">
+            <button 
+              v-for="page in totalPages" 
+              :key="page"
+              @click="currentPage = page"
+              class="w-10 h-10 flex items-center justify-center border rounded-xl font-bold text-sm transition-all cursor-pointer select-none"
+              :class="currentPage === page ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <button 
+            :disabled="currentPage === totalPages"
+            @click="currentPage++"
+            class="px-4 py-2 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 disabled:cursor-not-allowed border border-slate-200 rounded-xl font-bold transition-all cursor-pointer select-none"
+          >
+            Next →
+          </button>
+        </div>
       </div>
 
     </div>

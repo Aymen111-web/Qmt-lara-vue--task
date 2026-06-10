@@ -41,7 +41,7 @@ const handleCreateTodo = async () => {
 
     triggerToast('Task created successfully! 🎉')
     newTodo.value = { title: '', description: '', start_date: '', due_date: '' }
-    setTimeout(() => router.push('/todos/list'), 1200)
+    setTimeout(() => router.push('/todos/list'), 1300)
 
   } catch (err) {
     triggerToast('Failed to create task', 'error')
@@ -101,10 +101,10 @@ onMounted(async () => {
 
           <!-- Card Toast Overlay -->
           <Transition name="toast-slide">
-            <div v-if="showToast" 
+            <div v-if="showToast"
                  class="absolute inset-x-0 top-0 p-3 text-center text-sm font-bold flex items-center justify-center gap-2 border-b z-10"
-                 :class="toastType === 'success' 
-                   ? 'bg-green-50 text-green-700 border-green-200' 
+                 :class="toastType === 'success'
+                   ? 'bg-green-50 text-green-700 border-green-200'
                    : 'bg-red-50 text-red-700 border-red-200'">
               <span>{{ toastType === 'success' ? '✅' : '❌' }}</span>
               <span>{{ toastMessage }}</span>

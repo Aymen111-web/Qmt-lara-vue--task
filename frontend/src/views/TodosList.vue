@@ -589,13 +589,13 @@ const statusConfig = {
 
       <input
         v-model="editingTodo.title"
-        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 transition-all"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black font-bold placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 transition-all"
         placeholder="Task Title"
       />
       <textarea
         v-model="editingTodo.description"
         rows="4"
-        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 resize-none transition-all"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black font-semibold placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg mb-3 resize-none transition-all"
         placeholder="Description"
       ></textarea>
 
@@ -605,7 +605,7 @@ const statusConfig = {
           <input
             type="date"
             v-model="editingTodo.start_date"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black font-semibold focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
           />
         </div>
         <div class="flex-1">
@@ -613,7 +613,7 @@ const statusConfig = {
           <input
             type="date"
             v-model="editingTodo.due_date"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 !text-black font-semibold focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-lg transition-all"
           />
         </div>
       </div>
@@ -737,8 +737,12 @@ const statusConfig = {
 }
 
 /* Explicit text override for Edit Modal input fields */
-.bg-white input,
+.bg-white input {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
 .bg-white textarea {
   color: #000000 !important;
+  font-weight: 600 !important;
 }
 </style>

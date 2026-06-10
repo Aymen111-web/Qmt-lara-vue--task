@@ -97,7 +97,19 @@ onMounted(async () => {
         </div>
 
         <!-- Form Card -->
-        <div class="bg-white rounded-2xl shadow border border-slate-100 p-10 max-w-[1100px]">
+        <div class="relative overflow-hidden bg-white rounded-2xl shadow border border-slate-100 p-10 max-w-[1100px]">
+
+          <!-- Card Toast Overlay -->
+          <Transition name="toast-slide">
+            <div v-if="showToast" 
+                 class="absolute inset-x-0 top-0 p-3 text-center text-sm font-bold flex items-center justify-center gap-2 border-b z-10"
+                 :class="toastType === 'success' 
+                   ? 'bg-green-50 text-green-700 border-green-200' 
+                   : 'bg-red-50 text-red-700 border-red-200'">
+              <span>{{ toastType === 'success' ? '✅' : '❌' }}</span>
+              <span>{{ toastMessage }}</span>
+            </div>
+          </Transition>
 
           <form @submit.prevent="handleCreateTodo" class="flex flex-col gap-8">
 
@@ -176,16 +188,21 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Toast -->
-    <div
-      v-if="showToast"
-      class="fixed bottom-8 right-8 px-6 py-4 rounded-2xl shadow-xl font-bold text-base"
-      :class="toastType === 'success'
-        ? 'bg-slate-900 text-white'
-        : 'bg-red-50 text-red-700 border border-red-200'"
-    >
-      {{ toastMessage }}
-    </div>
-
   </div>
 </template>
+
+<style scoped>
+/* Toast transitions */
+.toast-slide-enter-active,
+.toast-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toast-slide-enter-from {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+.toast-slide-leave-to {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+</style>

@@ -82,24 +82,25 @@ onMounted(async () => {
       />
 
       <div class="flex-1 px-6 py-10 mt-16 max-w-[1400px] w-full mx-auto">
+        <div class="max-w-3xl mx-auto">
 
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-10">
-          <div>
-            <h1 class="text-4xl font-black text-slate-900 tracking-tight">Create Task</h1>
-            <p class="text-base text-slate-500 mt-2">Add a new task to your list</p>
+          <!-- Header -->
+          <div class="flex justify-between items-center mb-10">
+            <div>
+              <h1 class="text-4xl font-black text-slate-900 tracking-tight">Create Task</h1>
+              <p class="text-base text-slate-500 mt-2">Add a new task to your list</p>
+            </div>
+
+            <button
+              class="px-6 py-3 rounded-xl border bg-white text-slate-600 hover:bg-slate-50 font-bold text-base shadow-sm hover:shadow transition-all"
+              @click="$router.push('/todos/list')"
+            >
+              ← View Tasks
+            </button>
           </div>
 
-          <button
-            class="px-6 py-3 rounded-xl border bg-white text-slate-600 hover:bg-slate-50 font-bold text-base shadow-sm hover:shadow transition-all"
-            @click="$router.push('/todos/list')"
-          >
-            ← View Tasks
-          </button>
-        </div>
-
-        <!-- Form Card -->
-        <div class="relative overflow-hidden bg-white rounded-2xl shadow border border-slate-100 p-10 w-full ">
+          <!-- Form Card -->
+          <div class="relative overflow-hidden bg-white rounded-2xl shadow border border-slate-100 p-10">
 
           <!-- Card Toast Overlay -->
           <Transition name="toast-slide">
@@ -189,8 +190,8 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-
   </div>
+</div>
 </template>
 
 <style scoped>

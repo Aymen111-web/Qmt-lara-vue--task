@@ -153,13 +153,6 @@ const isTaskInInterval = (todo, intervalStart, intervalEnd) => {
   return taskStart <= intervalEnd && taskEnd >= intervalStart
 }
 
-const isOverdue = (todo) => {
-  if (todo.status === 'overdue') return true
-  if (todo.status === 'completed') return false
-  if (!todo.due_date) return false
-  const todayStr = getTodayStr()
-  return todo.due_date < todayStr
-}
 
 const handleClickOutside = (event) => {
   if (filterContainer.value && !filterContainer.value.contains(event.target)) {
@@ -322,11 +315,11 @@ const statusConfig = {
 </script>
 
 <template>
-<div class="flex min-h-screen bg-slate-100">
+<div class="flex h-screen bg-slate-100 overflow-hidden">
 
   <TodosSidebar @logout="handleLogout" />
 
-  <div class="flex-1 ml-[240px] flex flex-col">
+  <div class="flex-1 ml-[240px] flex flex-col h-screen overflow-hidden">
 
     <TodosNavbar
       :user="user"
@@ -335,22 +328,22 @@ const statusConfig = {
       @logout="handleLogout"
     />
 
-    <div class="flex-1 p-10 mt-16 max-w-[1400px] w-full mx-auto">
+    <div class="flex-1 p-6 mt-16 max-w-[1400px] w-full mx-auto flex flex-col overflow-hidden min-h-0">
 
       <!-- HEADER -->
-      <div class="flex justify-between items-center mb-10">
+      <div class="flex justify-between items-center mb-4">
         <div>
-          <h1 class="text-4xl font-black text-slate-900 tracking-tight">My Tasks</h1>
-          <p class="text-slate-500 text-base mt-2">{{ stats.total }} tasks total</p>
+          <h1 class="text-3xl font-black text-slate-900 tracking-tight">My Tasks</h1>
+          <p class="text-slate-500 text-sm mt-1">{{ stats.total }} tasks total</p>
         </div>
 
         <div class="flex gap-4 items-center">
           <div class="flex bg-white border rounded-xl overflow-hidden shadow-sm">
-            <button class="px-5 py-3 text-base font-bold transition-all cursor-pointer" :class="viewStyle==='card'?'bg-slate-900 text-white':'hover:bg-slate-50'" @click="viewStyle='card'">Cards</button>
-            <button class="px-5 py-3 text-base font-bold transition-all cursor-pointer" :class="viewStyle==='table'?'bg-slate-900 text-white':'hover:bg-slate-50'" @click="viewStyle='table'">Table</button>
+            <button class="px-4 py-2 text-sm font-bold transition-all cursor-pointer" :class="viewStyle==='card'?'bg-slate-900 text-white':'hover:bg-slate-50'" @click="viewStyle='card'">Cards</button>
+            <button class="px-4 py-2 text-sm font-bold transition-all cursor-pointer" :class="viewStyle==='table'?'bg-slate-900 text-white':'hover:bg-slate-50'" @click="viewStyle='table'">Table</button>
           </div>
 
-          <button class="bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl font-bold text-lg shadow-md hover:shadow-lg transition-all cursor-pointer"
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold text-sm shadow hover:shadow-md transition-all cursor-pointer"
             @click="$router.push('/todos/create')">
             + New Task
           </button>
@@ -358,11 +351,11 @@ const statusConfig = {
       </div>
 
       <!-- FILTERS -->
-      <div class="flex justify-between items-center mb-8">
+      <div class="flex justify-between items-center mb-4">
         <div ref="filterContainer" class="relative">
           <button
             @click="showFilterDropdown = !showFilterDropdown"
-            class="flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-800 px-5.5 py-3 rounded-xl font-bold text-base shadow-sm hover:shadow transition-all cursor-pointer relative"
+            class="flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-800 px-4 py-2 rounded-xl font-bold text-sm shadow-sm hover:shadow transition-all cursor-pointer relative"
           >
             <span>🔍</span> Filter
             <span v-if="activeFiltersCount > 0" class="flex items-center justify-center bg-blue-600 text-white text-xs w-5 h-5 rounded-full font-black animate-scale-in">
@@ -478,163 +471,167 @@ const statusConfig = {
       </div>
 
       <!-- EMPTY -->
-      <div v-else-if="filteredTodos.length===0" class="text-center py-24">
+      <div v-else-if="filteredTodos.length===0" class="text-center py-12">
         <div class="text-7xl">📭</div>
-        <p class="text-slate-500 text-xl mt-4 mb-8 font-medium">No tasks found</p>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl text-lg font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+        <p class="text-slate-500 text-lg mt-3 mb-6 font-medium">No tasks found</p>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-base font-bold shadow hover:shadow-md transition-all cursor-pointer"
           @click="$router.push('/todos/create')">
           Create Task
         </button>
       </div>
 
       <!-- CARD VIEW -->
-      <div v-else-if="viewStyle==='card'" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else-if="viewStyle==='card'" class="flex-1 overflow-y-auto pr-1 min-h-0 mb-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 pb-2">
 
-        <div v-for="t in paginatedTodos" :key="t.id"
-          class="relative overflow-hidden bg-white rounded-2xl border shadow p-6 flex flex-col gap-3 transition-all hover:shadow-md">
+          <div v-for="t in paginatedTodos" :key="t.id"
+            class="relative overflow-hidden bg-white rounded-2xl border shadow p-4 flex flex-col gap-2 transition-all hover:shadow-md">
 
-          <!-- Card Toast Overlay -->
-          <Transition name="toast-slide">
-            <div v-if="cardToasts[t.id]"
-                 class="absolute inset-x-0 top-0 p-3 text-center text-sm font-bold flex items-center justify-center gap-2 border-b z-10"
-                 :class="cardToasts[t.id].type === 'success'
-                   ? 'bg-green-50 text-green-700 border-green-200'
-                   : 'bg-red-50 text-red-700 border-red-200'">
-              <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
-              <span>{{ cardToasts[t.id].message }}</span>
+            <!-- Card Toast Overlay -->
+            <Transition name="toast-slide">
+              <div v-if="cardToasts[t.id]"
+                   class="absolute inset-x-0 top-0 p-3 text-center text-sm font-bold flex items-center justify-center gap-2 border-b z-10"
+                   :class="cardToasts[t.id].type === 'success'
+                     ? 'bg-green-50 text-green-700 border-green-200'
+                     : 'bg-red-50 text-red-700 border-red-200'">
+                <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
+                <span>{{ cardToasts[t.id].message }}</span>
+              </div>
+            </Transition>
+
+            <div class="flex justify-between items-center">
+              <select
+                :value="t.computedStatus"
+                @change="handleStatusChange(t, $event.target.value)"
+                class="px-3 py-1.5 text-xs rounded-full font-bold outline-none border-none cursor-pointer appearance-none bg-no-repeat pr-7 shadow-sm hover:brightness-95 transition-all"
+                :class="statusConfig[t.computedStatus].badge"
+                style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-position: right 8px center; background-size: 8px auto;"
+              >
+                <option value="todo" class="bg-white text-slate-800 font-medium">Todo</option>
+                <option value="pending" class="bg-white text-slate-800 font-medium">Pending</option>
+                <option value="completed" class="bg-white text-slate-800 font-medium">Completed</option>
+                <option value="overdue" class="bg-white text-slate-800 font-medium">Overdue</option>
+              </select>
+
+              <div class="flex gap-3 text-base">
+                <button @click="openEditModal(t)" class="hover:scale-120 transition-all cursor-pointer">✏️</button>
+                <button @click="handleDeleteTodo(t.id)" class="hover:scale-120 transition-all cursor-pointer">🗑️</button>
+              </div>
             </div>
-          </Transition>
 
-          <div class="flex justify-between items-center">
-            <select
-              :value="t.computedStatus"
-              @change="handleStatusChange(t, $event.target.value)"
-              class="px-4 py-2 text-sm rounded-full font-bold outline-none border-none cursor-pointer appearance-none bg-no-repeat pr-8 shadow-sm hover:brightness-95 transition-all"
-              :class="statusConfig[t.computedStatus].badge"
-              style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-position: right 10px center; background-size: 10px auto;"
-            >
-              <option value="todo" class="bg-white text-slate-800 font-medium">Todo</option>
-              <option value="pending" class="bg-white text-slate-800 font-medium">Pending</option>
-              <option value="completed" class="bg-white text-slate-800 font-medium">Completed</option>
-              <option value="overdue" class="bg-white text-slate-800 font-medium">Overdue</option>
-            </select>
+            <h2 class="font-bold text-lg mt-1 text-slate-800" :class="t.computedStatus==='completed'?'line-through text-slate-400':''">
+              {{ t.title }}
+            </h2>
 
-            <div class="flex gap-3 text-lg">
-              <button @click="openEditModal(t)" class="hover:scale-120 transition-all cursor-pointer">✏️</button>
-              <button @click="handleDeleteTodo(t.id)" class="hover:scale-120 transition-all cursor-pointer">🗑️</button>
-            </div>
+            <p class="text-sm text-slate-600 mb-1 leading-normal line-clamp-2" :title="t.description">{{ t.description || 'No description provided' }}</p>
+
           </div>
-
-          <h2 class="font-bold text-xl mt-3 text-slate-800" :class="t.computedStatus==='completed'?'line-through text-slate-400':''">
-            {{ t.title }}
-          </h2>
-
-          <p class="text-base text-slate-600 mb-2 leading-relaxed">{{ t.description || 'No description provided' }}</p>
-
         </div>
       </div>
 
       <!-- TABLE VIEW -->
-      <div v-else class="bg-white border rounded-2xl overflow-hidden shadow">
-        <table class="w-full text-base">
-          <thead class="bg-slate-50 text-left">
-            <tr>
-              <th class="p-4.5 font-bold text-slate-900">Title</th>
-              <th class="p-4.5 font-bold text-slate-900">Description</th>
-              <th class="p-4.5 font-bold text-slate-900">Status</th>
-              <th class="p-4.5 font-bold text-slate-900">Start</th>
-              <th class="p-4.5 font-bold text-slate-900">Due</th>
-              <th class="p-4.5 font-bold text-slate-900 text-right">Actions</th>
-            </tr>
-          </thead>
+      <div v-else class="flex-1 overflow-hidden border rounded-2xl shadow flex flex-col mb-4 bg-white min-h-0">
+        <div class="flex-1 overflow-y-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-left sticky top-0 z-10 shadow-sm">
+              <tr>
+                <th class="p-3 font-bold text-slate-900">Title</th>
+                <th class="p-3 font-bold text-slate-900">Description</th>
+                <th class="p-3 font-bold text-slate-900">Status</th>
+                <th class="p-3 font-bold text-slate-900">Start</th>
+                <th class="p-3 font-bold text-slate-900">Due</th>
+                <th class="p-3 font-bold text-slate-900 text-right">Actions</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            <tr v-for="t in paginatedTodos" :key="t.id" class="border-t hover:bg-slate-50/50 transition-colors">
-              <td class="p-4.5">
-                <div class="font-bold text-slate-800">{{ t.title }}</div>
-              </td>
+            <tbody>
+              <tr v-for="t in paginatedTodos" :key="t.id" class="border-t hover:bg-slate-50/50 transition-colors">
+                <td class="p-3">
+                  <div class="font-bold text-slate-800">{{ t.title }}</div>
+                </td>
 
-              <td class="p-4.5">
-                <div class="max-w-[250px] truncate text-slate-600" :title="t.description">
-                  {{ t.description || '—' }}
-                </div>
-              </td>
+                <td class="p-3">
+                  <div class="max-w-[250px] truncate text-slate-600" :title="t.description">
+                    {{ t.description || '—' }}
+                  </div>
+                </td>
 
-              <td class="p-4.5">
-                <div class="relative inline-flex items-center">
-                  <select
-                    :value="t.computedStatus"
-                    @change="handleStatusChange(t, $event.target.value)"
-                    class="px-4 py-2 text-sm rounded-full font-bold outline-none border-none cursor-pointer appearance-none bg-no-repeat pr-8 shadow-sm hover:brightness-95 transition-all"
-                    :class="statusConfig[t.computedStatus].badge"
-                    style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-position: right 10px center; background-size: 10px auto;"
-                  >
-                    <option value="todo" class="bg-white text-slate-800 font-medium">Todo</option>
-                    <option value="pending" class="bg-white text-slate-800 font-medium">Pending</option>
-                    <option value="completed" class="bg-white text-slate-800 font-medium">Completed</option>
-                    <option value="overdue" class="bg-white text-slate-800 font-medium">Overdue</option>
-                  </select>
-                  <Transition name="fade">
-                    <div v-if="cardToasts[t.id]"
-                         class="absolute left-full ml-3 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap shadow border flex items-center gap-1.5 z-10"
-                         :class="cardToasts[t.id].type === 'success'
-                           ? 'bg-green-50 text-green-700 border-green-200'
-                           : 'bg-red-50 text-red-700 border-red-200'">
-                      <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
-                      <span>{{ cardToasts[t.id].message }}</span>
-                    </div>
-                  </Transition>
-                </div>
-              </td>
+                <td class="p-3">
+                  <div class="relative inline-flex items-center">
+                    <select
+                      :value="t.computedStatus"
+                      @change="handleStatusChange(t, $event.target.value)"
+                      class="px-3 py-1.5 text-xs rounded-full font-bold outline-none border-none cursor-pointer appearance-none bg-no-repeat pr-7 shadow-sm hover:brightness-95 transition-all"
+                      :class="statusConfig[t.computedStatus].badge"
+                      style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-position: right 8px center; background-size: 8px auto;"
+                    >
+                      <option value="todo" class="bg-white text-slate-800 font-medium">Todo</option>
+                      <option value="pending" class="bg-white text-slate-800 font-medium">Pending</option>
+                      <option value="completed" class="bg-white text-slate-800 font-medium">Completed</option>
+                      <option value="overdue" class="bg-white text-slate-800 font-medium">Overdue</option>
+                    </select>
+                    <Transition name="fade">
+                      <div v-if="cardToasts[t.id]"
+                           class="absolute left-full ml-3 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap shadow border flex items-center gap-1.5 z-10"
+                           :class="cardToasts[t.id].type === 'success'
+                             ? 'bg-green-50 text-green-700 border-green-200'
+                             : 'bg-red-50 text-red-700 border-red-200'">
+                        <span>{{ cardToasts[t.id].type === 'success' ? '✅' : '❌' }}</span>
+                        <span>{{ cardToasts[t.id].message }}</span>
+                      </div>
+                    </Transition>
+                  </div>
+                </td>
 
-              <td class="p-4.5 text-slate-600">{{ t.start_date || '—' }}</td>
-              <td class="p-4.5 text-slate-600">{{ t.due_date || '—' }}</td>
+                <td class="p-3 text-slate-600">{{ t.start_date || '—' }}</td>
+                <td class="p-3 text-slate-600">{{ t.due_date || '—' }}</td>
 
-              <td class="p-4.5 text-right">
-                <div class="flex justify-end gap-3">
-                  <button
-                    @click="openEditModal(t)"
-                    class="inline-flex items-center gap-1.5 px-4.5 py-2.5 text-sm font-bold rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer"
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    @click="handleDeleteTodo(t.id)"
-                    class="inline-flex items-center gap-1.5 px-4.5 py-2.5 text-sm font-bold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer"
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <td class="p-3 text-right">
+                  <div class="flex justify-end gap-2">
+                    <button
+                      @click="openEditModal(t)"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      @click="handleDeleteTodo(t.id)"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- PAGINATION -->
-      <div v-if="filteredTodos.length > itemsPerPage" class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-10 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm">
-        <div class="text-sm font-bold text-slate-500">
+      <div v-if="filteredTodos.length > itemsPerPage" class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2 bg-white border border-slate-100 p-3 rounded-2xl shadow-sm">
+        <div class="text-xs font-bold text-slate-500">
           Showing <span class="text-slate-800">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to 
           <span class="text-slate-800">{{ Math.min(currentPage * itemsPerPage, filteredTodos.length) }}</span> of 
           <span class="text-slate-800">{{ filteredTodos.length }}</span> tasks
         </div>
 
-        <div class="flex gap-2.5 items-center">
+        <div class="flex gap-2 items-center">
           <button 
             :disabled="currentPage === 1"
             @click="currentPage--"
-            class="px-4 py-2 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 disabled:cursor-not-allowed border border-slate-200 rounded-xl font-bold transition-all cursor-pointer select-none"
+            class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 disabled:cursor-not-allowed border border-slate-200 rounded-lg text-xs font-bold transition-all cursor-pointer select-none"
           >
             ← Previous
           </button>
 
-          <div class="flex gap-1.5">
+          <div class="flex gap-1">
             <button 
               v-for="page in totalPages" 
               :key="page"
               @click="currentPage = page"
-              class="w-10 h-10 flex items-center justify-center border rounded-xl font-bold text-sm transition-all cursor-pointer select-none"
-              :class="currentPage === page ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'"
+              class="w-8 h-8 flex items-center justify-center border rounded-lg font-bold text-xs transition-all cursor-pointer select-none"
+              :class="currentPage === page ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'"
             >
               {{ page }}
             </button>
@@ -643,7 +640,7 @@ const statusConfig = {
           <button 
             :disabled="currentPage === totalPages"
             @click="currentPage++"
-            class="px-4 py-2 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 disabled:cursor-not-allowed border border-slate-200 rounded-xl font-bold transition-all cursor-pointer select-none"
+            class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 disabled:cursor-not-allowed border border-slate-200 rounded-lg text-xs font-bold transition-all cursor-pointer select-none"
           >
             Next →
           </button>

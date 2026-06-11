@@ -276,8 +276,9 @@ const handleSaveEdit = async () => {
 
     showEditModal.value = false
     triggerToast('Updated successfully', 'success', editingTodo.value.id)
-  } catch {
-    triggerToast('Update failed', 'error', editingTodo.value.id)
+  } catch (err) {
+    const errorMsg = err.response?.data?.message || err.message || ''
+    triggerToast(`Update failed: ${errorMsg}`.trim(), 'error', editingTodo.value.id)
   }
 }
 
@@ -293,8 +294,9 @@ const confirmDelete = async () => {
     await todoService.delete(targetId)
     todos.value = todos.value.filter(t => t.id !== targetId)
     triggerToast('Deleted successfully', 'success', 'global')
-  } catch {
-    triggerToast('Delete failed', 'error', 'global')
+  } catch (err) {
+    const errorMsg = err.response?.data?.message || err.message || ''
+    triggerToast(`Delete failed: ${errorMsg}`.trim(), 'error', 'global')
   } finally {
     showDeleteModal.value = false
     todoToDeleteId.value = null

@@ -44,7 +44,9 @@ const handleCreateTodo = async () => {
     setTimeout(() => router.push('/todos/list'), 1300)
 
   } catch (err) {
-    triggerToast('Failed to create task', 'error')
+    console.error('Task creation failed:', err)
+    const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || ''
+    triggerToast(`Failed to create task: ${errorMsg}`.trim(), 'error')
   } finally {
     actionLoading.value = false
   }

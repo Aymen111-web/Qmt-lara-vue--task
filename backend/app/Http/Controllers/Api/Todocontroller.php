@@ -19,21 +19,31 @@ class TodoController extends Controller
     // CREATE TODO
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required',
-            'description' => 'nullable',
-            'start_date' => 'nullable|date',
-            'due_date' => 'nullable|date',
-        ]);
+        try {
+            $request->validate([
+                'title' => 'required',
+                'description' => 'nullable',
+                'start_date' => 'nullable|date',
+                'due_date' => 'nullable|date',
+            ]);
 
-        return Todo::create([
-            'user_id' => $request->user()->id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'start_date' => $request->start_date,
-            'due_date' => $request->due_date,
-            'status' => 'todo'
-        ]);
+            return Todo::create([
+                'user_id' => $request->user()->id,
+                'title' => $request->title,
+                'description' => $request->description,
+                'start_date' => $request->start_date,
+                'due_date' => $request->due_date,
+                'status' => 'todo'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
     }
 
     // UPDATE TODO

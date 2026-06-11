@@ -211,7 +211,7 @@ const filteredTodos = computed(() => {
 })
 
 const currentPage = ref(1)
-const itemsPerPage = ref(9)
+const itemsPerPage = ref(6)
 
 const paginatedTodos = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value

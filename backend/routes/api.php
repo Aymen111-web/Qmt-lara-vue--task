@@ -24,7 +24,7 @@ Route::get('/db-check', function () {
                 'todos' => $todosExist ? 'Exists' : 'Missing',
             ]
         ]);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         return response()->json([
             'connection' => 'Failed',
             'error' => $e->getMessage()
@@ -50,7 +50,7 @@ Route::get('/test-create', function () {
             'status' => 'Success',
             'todo' => $todo
         ]);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         return response()->json([
             'status' => 'Failed',
             'error' => $e->getMessage(),

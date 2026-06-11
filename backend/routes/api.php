@@ -32,6 +32,34 @@ Route::get('/db-check', function () {
     }
 });
 
+Route::get('/test-create', function () {
+    try {
+        $user = \App\Models\User::first();
+        if (!$user) {
+            return response()->json(['error' => 'No user found. Please register a user first.'], 400);
+        }
+        
+        $todo = \App\Models\Todo::create([
+            'user_id' => $user->id,
+            'title' => 'Test Task',
+            'description' => 'Test Description',
+            'status' => 'todo'
+        ]);
+        
+        return response()->json([
+            'status' => 'Success',
+            'todo' => $todo
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'Failed',
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 

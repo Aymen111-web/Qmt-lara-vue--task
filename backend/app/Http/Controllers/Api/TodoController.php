@@ -37,7 +37,7 @@ class TodoController extends Controller
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),

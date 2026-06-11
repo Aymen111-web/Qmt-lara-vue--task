@@ -9,6 +9,29 @@ use App\Http\Controllers\Api\TodoController;
 Route::get('/', function () {
     return response()->json(['status' => 'API is running']);
 });
+
+Route::get('/db-check', function () {
+    try {
+        Illuminate\Support\Facades\DB::connection()->getPdo();
+        $usersExist = Illuminate\Support\Facades\Schema::hasTable('users');
+        $todosExist = Illuminate\Support\Facades\Schema::hasTable('todos');
+        
+        return response()->json([
+            'connection' => 'Successful',
+            'database_name' => Illuminate\Support\Facades\DB::connection()->getDatabaseName(),
+            'tables' => [
+                'users' => $usersExist ? 'Exists' : 'Missing',
+                'todos' => $todosExist ? 'Exists' : 'Missing',
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'connection' => 'Failed',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 

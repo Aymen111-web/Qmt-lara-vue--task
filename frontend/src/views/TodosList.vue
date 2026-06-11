@@ -481,8 +481,8 @@ const statusConfig = {
       </div>
 
       <!-- CARD VIEW -->
-      <div v-else-if="viewStyle==='card'" class="flex-1 overflow-y-auto pr-1 min-h-0 mb-4">
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 pb-2">
+      <div v-else-if="viewStyle==='card'" class="flex-1 overflow-y-auto pr-1 min-h-0 mb-4 flex flex-col">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 md:grid-rows-3 lg:grid-rows-2 gap-4 pb-2 flex-1">
 
           <div v-for="t in paginatedTodos" :key="t.id"
             class="relative overflow-hidden bg-white rounded-2xl border shadow p-4 flex flex-col gap-2 transition-all hover:shadow-md">
